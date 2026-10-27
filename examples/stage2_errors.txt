@@ -1,0 +1,7 @@
+# Скрипт с ошибками: исполнение продолжается, ошибки отмечаются
+ls first
+missing_command
+cd one two
+ls "unfinished
+ls after_errors
+exit

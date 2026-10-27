@@ -28,14 +28,16 @@ class Shell:
         try:
             tokens = parse_line(line)
         except ValueError as error:
-            return CommandResult(f"error: parse: {error}")
+            return CommandResult(f"error: parse: {error}", is_error=True)
         if not tokens:
             return CommandResult()
         name, *arguments = tokens
         handler = COMMANDS.get(name)
         if handler is None:
-            return CommandResult(f"error: {name}: command not found")
+            return CommandResult(
+                f"error: {name}: command not found", is_error=True
+            )
         try:
             return handler(arguments)
         except CommandError as error:
-            return CommandResult(f"error: {error}")
+            return CommandResult(f"error: {error}", is_error=True)

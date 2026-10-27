@@ -1,0 +1,5 @@
+# Стартовый скрипт этапа 2: корректные команды и комментарии
+ls
+ls "My Documents" file.txt   # комментарий после команды
+cd "My Documents"
+ls 'a # not a comment'

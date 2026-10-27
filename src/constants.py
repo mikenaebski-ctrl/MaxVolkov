@@ -1,4 +1,4 @@
-"""Named settings for the first implementation stage."""
+"""Named settings shared by the shell modules."""
 
 DEFAULT_VFS_NAME = "demo-vfs"
 DEFAULT_USER_NAME = "student"
@@ -10,3 +10,9 @@ CD_MAX_ARGUMENTS = 1
 EXIT_ARGUMENTS = 0
 EXIT_SUCCESS = 0
 EXIT_FAILURE = 1
+PROGRAM_NAME = "python3 -m src"
+NOT_SET_TEXT = "(not set)"
+COMMENT_CHAR = "#"
+QUOTE_CHARS = "'\""
+SINGLE_QUOTE = "'"
+ESCAPE_CHAR = "\\"

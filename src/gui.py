@@ -3,7 +3,9 @@
 import tkinter as tk
 from tkinter.scrolledtext import ScrolledText
 
+from .config import Config, describe
 from .constants import TERMINAL_FONT, WIDGET_PADDING, WINDOW_GEOMETRY
+from .script import ScriptError, load_script, run_script
 from .shell import Shell
 
 
@@ -36,7 +38,7 @@ class ShellWindow:
         )
         self.entry.bind("<Return>", self.submit)
         self.entry.focus_set()
-        self.append("Stage 1: ls, cd, exit. Type a command and press Enter.\n")
+        self.append("Stage 2: ls, cd, exit. Type a command and press Enter.\n")
 
     def append(self, text: str) -> None:
         """Append output while keeping the transcript read only."""
@@ -44,6 +46,26 @@ class ShellWindow:
         self.output.insert(tk.END, text)
         self.output.configure(state=tk.DISABLED)
         self.output.see(tk.END)
+
+    def print_line(self, text: str) -> None:
+        """Append one line of output."""
+        self.append(f"{text}\n")
+
+    def show_config(self, config: Config) -> None:
+        """Print the startup parameters for debugging."""
+        for line in describe(config):
+            self.print_line(line)
+
+    def start_script(self, path: str) -> None:
+        """Replay the startup script and report unreadable files."""
+        try:
+            lines = load_script(path)
+        except ScriptError as error:
+            self.print_line(f"error: {error}")
+            return
+        report = run_script(self.shell, lines, self.print_line)
+        if report.exited:
+            self.root.destroy()
 
     def submit(self, event=None) -> str:
         """Echo input, show its result, and handle a valid exit."""
@@ -58,8 +80,11 @@ class ShellWindow:
         return "break"
 
 
-def launch() -> None:
-    """Run the tkinter event loop."""
+def launch(config: Config) -> None:
+    """Run the tkinter event loop, replaying the script once it starts."""
     root = tk.Tk()
-    ShellWindow(root, Shell())
+    window = ShellWindow(root, Shell(config.vfs_name))
+    window.show_config(config)
+    if config.script_path:
+        root.after(0, window.start_script, config.script_path)
     root.mainloop()
