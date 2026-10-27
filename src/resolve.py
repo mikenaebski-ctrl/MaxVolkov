@@ -66,3 +66,11 @@ def resolve(root: VfsDir, cwd: List[str], path: str) -> Resolved:
 def join_path(parts: List[str]) -> str:
     """Format name segments as an absolute path."""
     return ROOT_PATH + ROOT_PATH.join(parts)
+
+
+def node_at(root: VfsDir, parts: List[str]) -> Node:
+    """Return the entry at name segments known to exist."""
+    node: Node = root
+    for part in parts:
+        node = node.children[part]
+    return node

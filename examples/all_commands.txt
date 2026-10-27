@@ -1,4 +1,4 @@
-# Общий скрипт всех команд этапов 1-4 на rich.zip (tests/make_vfs.py)
+# Общий скрипт всех команд этапов 1-5 на rich.zip (tests/make_vfs.py)
 # Комментарий, пустые строки и кавычки
 whoami   # комментарий после команды
 ls "docs" 'src'
@@ -25,6 +25,15 @@ ls nothing
 cat docs
 tree -L x
 whoami now
+# --- mv: переименование, перемещение, -v, -n, ошибки (только в памяти)
+mv readme.txt notes.txt
+mv -v notes.txt docs
+mv src code
+mv -n code docs/img
+tree -L 2
+mv nothing docs
+mv docs docs/new
+mv
 # --- exit закрывает окно, команды после него не выполняются
 exit
 ls never_shown

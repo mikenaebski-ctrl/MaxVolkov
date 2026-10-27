@@ -1,0 +1,47 @@
+# Этап 5: mv на архиве rich.zip (tests/make_vfs.py); изменения только в памяти
+tree -L 2
+# --- переименование файла
+mv readme.txt notes.txt
+ls
+cat notes.txt
+# --- перемещение в существующую папку, -v показывает результат
+mv -v notes.txt docs
+ls docs
+# --- переименование папки: содержимое сохраняется
+mv src code
+tree code
+# --- папка в папку, несколько источников сразу (включая скрытый файл)
+mv code docs/img
+mv .hidden empty docs
+tree -a
+# --- перезапись файла файлом, -n ничего не перезаписывает
+mv docs/guide.txt docs/notes.txt
+cat docs/notes.txt
+mv -n docs/.hidden docs/notes.txt
+cat docs/notes.txt
+# --- текущая папка следует за перемещённой
+cd docs/img
+mv -v /docs/img /top
+ls
+cd /
+tree
+# --- ошибки: операнды, источник, приёмник
+mv
+mv top
+mv nothing docs
+mv top nothing/x
+mv top docs/notes.txt/x
+mv top fresh/
+mv -z top docs
+mv /  docs
+# --- ошибки: сам в себя, тот же файл, перезапись, несколько источников
+mv docs docs/new
+mv top top
+mv docs/notes.txt docs/notes.txt
+mv top docs/notes.txt
+mv docs top docs/notes.txt
+# --- один неверный источник не мешает остальным
+mv nothing top docs
+tree
+vfs-info
+exit

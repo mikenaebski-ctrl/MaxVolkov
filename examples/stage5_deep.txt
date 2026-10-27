@@ -1,0 +1,15 @@
+# Этап 5: mv на VFS глубиной 4 уровня (deep.zip)
+tree
+mv level1/level2/level3/level4/four.txt top.txt
+mv level1/level2/level3 level1/three
+cd level1/three
+ls
+cd ..
+mv ../level1 /renamed
+ls
+cd /
+tree
+mv renamed renamed/level2/inner
+mv top.txt renamed/level2
+tree
+exit

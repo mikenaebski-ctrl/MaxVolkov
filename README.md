@@ -12,8 +12,8 @@
 
 Работа выполняется по этапам. Готовы **этап 1 (REPL)**, **этап 2
 (конфигурация)**, **этап 3 (VFS из ZIP-архива)** и **этап 4 (основные
-команды)**: `ls`, `cd`, `cat`, `tree`, `whoami`. Команда `mv` будет
-добавлена на этапе 5.
+команды)**: `ls`, `cd`, `cat`, `tree`, `whoami` и **этап 5
+(дополнительные команды)**: `mv`. Все этапы задания выполнены.
 
 Требования: Python 3.9 или новее, только стандартная библиотека и tkinter.
 
@@ -93,7 +93,7 @@ python3 tests/make_vfs.py /tmp/vfs
 `not_a_zip.zip`, `truncated.zip`, `corrupt.zip`, `unsafe.zip`,
 `clash.zip`.
 
-## Команды (этап 4)
+## Команды (этапы 1-5)
 
 Пути поддерживаются абсолютные (`/docs`) и относительные, с `.` и `..`;
 выше корня подняться нельзя (`cd ..` в корне остаётся в корне). Текущая
@@ -106,9 +106,27 @@ python3 tests/make_vfs.py /tmp/vfs
 | `cd [путь]` | без пути: в корень | меняет текущую папку; ошибки `No such file or directory`, `Not a directory`; больше одного пути: `expected at most one path` |
 | `cat файл...` | несколько файлов подряд | текст как есть, двоичные данные в base64; `Is a directory`, `No such file or directory`, `missing file operand` |
 | `tree [-a] [-L N] [путь]` | `-a` скрытые; `-L N` или `-LN` глубина | дерево с `├──`, `└──`, `│`, затем `N directories, M files` |
+| `mv [-n] [-v] источник... приёмник` | `-n` не перезаписывать существующее (молча пропустить); `-v` печатать `renamed 'a' -> 'b'` | переименует или переместит записи только в памяти |
 | `whoami` | без аргументов | имя пользователя из приглашения (`student`) |
 | `exit` | без аргументов | закрывает окно |
 | `vfs-info [--list]` | служебная | имя, число папок и файлов, размер; с `--list` все пути (`text` или `base64`, размер) |
+
+Правила `mv` (как в GNU mv):
+
+- приёмник существует и это папка: источники попадают внутрь под своими
+  именами; иначе это новое имя (источник должен быть один, а папка
+  приёмника существовать: `target '...' is not a directory`);
+- файл заменяет файл; папка заменяет только пустую папку (`Directory not
+  empty`); папку на файл и файл на папку заменить нельзя;
+- запрещены перемещение в собственное поддерево (`cannot move 'a' to a
+  subdirectory of itself`), на себя (`are the same file`), корня, а также
+  `.` и `..` (`Device or resource busy`);
+- ошибочный источник не мешает остальным: остальные перемещаются, а
+  ошибка выводится;
+- если перемещена папка, в которой (или внутри которой) вы стоите,
+  текущая папка следует за ней, приглашение обновляется;
+- архив на диске не изменяется, изменения живут только в памяти и
+  пропадают после закрытия окна.
 
 Файлы и папки, имена которых начинаются с точки, считаются скрытыми.
 Неизвестная опция даёт `invalid option -- 'x'`. Пустая строка
@@ -128,7 +146,7 @@ src/
   session.py       создание оболочки: загрузка VFS, сообщения
   resolve.py       разбор путей (., .., абсолютные и относительные)
   commands/        команды: fs.py (ls, cd, cat), tree.py, whoami.py,
-                   vfs_info.py, repl.py (exit), options.py (опции)
+                   mv.py, vfs_info.py, repl.py (exit), options.py (опции)
   result.py        результат команды и признак закрытия окна
   errors.py        ожидаемые ошибки команд
   constants.py     именованные настройки
@@ -183,6 +201,8 @@ python3 -B -m unittest discover -s tests -v
 - скрипт: комментарии, пропуск пустых строк, ошибки, `exit`;
 - команды этапа 4: все режимы `ls`, `cd`, `cat`, `tree`, `whoami`,
   пути, ошибки и частичный вывод при нескольких операндах;
+- `mv`: переименование, перемещение, несколько источников, перезапись,
+  `-n`, `-v`, все ошибки, слежение текущей папки, архив не меняется;
 - VFS: минимальный, пустой, несколько файлов, 4 уровня, base64, все
   ошибки загрузки, неизменность архива; команду `vfs-info`;
 - ограничения кода (`tests/test_quality.py`): длина строк (до 80) и
@@ -225,10 +245,18 @@ sh tests/scripts/stage4_deep.sh     # навигация на глубину 4 �
 sh tests/scripts/stage4_no_vfs.sh   # no VFS loaded и неудачная загрузка
 ```
 
-Стартовые скрипты: `examples/stage4_commands.txt` (все режимы и
+Скрипты этапа 5 (`mv`):
+
+```sh
+sh tests/scripts/stage5_rich.sh     # mv на rich.zip + общий скрипт 1-5
+sh tests/scripts/stage5_deep.sh     # mv на глубине 4 уровня
+sh tests/scripts/stage5_no_vfs.sh   # mv без VFS / после сбоя загрузки
+```
+
+Стартовые скрипты: `examples/stage5_mv.txt` (все режимы и ошибки `mv`),
+`examples/stage5_deep.txt`, `examples/stage4_commands.txt` (все режимы и
 ошибки этапа 4), `examples/stage4_deep.txt` и общий
-`examples/all_commands.txt` со всеми командами этапов 1-4 и ошибками;
-он пополняется на каждом следующем этапе.
+`examples/all_commands.txt` со всеми командами этапов 1-5 и ошибками.
 
 ## Примеры использования
 
@@ -262,9 +290,21 @@ second line
 error: cat: docs: Is a directory
 student@rich.zip:/$ cd nothing
 error: cd: nothing: No such file or directory
-student@rich.zip:/$ whoami
+student@rich.zip:/$ mv -v readme.txt docs
+renamed 'readme.txt' -> 'docs/readme.txt'
+student@rich.zip:/$ mv src docs/src
+student@rich.zip:/$ cd docs
+student@rich.zip:/docs$ mv /docs /library
+student@rich.zip:/library$ ls
+guide.txt
+img
+readme.txt
+src
+student@rich.zip:/library$ mv /library /library/inner
+error: mv: cannot move '/library' to a subdirectory of itself, '/library/inner'
+student@rich.zip:/library$ whoami
 student
-student@rich.zip:/$ exit
+student@rich.zip:/library$ exit
 ```
 
 Без `--vfs` файловые команды сообщают об отсутствии VFS (так выглядят
