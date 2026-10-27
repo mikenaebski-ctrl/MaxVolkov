@@ -185,7 +185,7 @@ class CwdTests(MvTestCase):
         shell = self.shell()
         self.run_in(shell, "cd docs/img")
         self.run_in(shell, "mv /docs/img /top")
-        self.assertEqual(shell.prompt, "student@rich.zip:/top$ ")
+        self.assertEqual(shell.prompt, f"{shell.user}@rich.zip:/top$ ")
         self.assertEqual(self.run_in(shell, "ls"), "logo.bin")
 
     def test_moving_an_ancestor(self) -> None:
@@ -193,7 +193,7 @@ class CwdTests(MvTestCase):
         shell = self.shell()
         self.run_in(shell, "cd docs/img")
         self.run_in(shell, "mv /docs /src")
-        self.assertEqual(shell.prompt, "student@rich.zip:/src/docs/img$ ")
+        self.assertEqual(shell.prompt, f"{shell.user}@rich.zip:/src/docs/img$ ")
 
     def test_unrelated_move_keeps_directory(self) -> None:
         """Other moves leave the position alone."""

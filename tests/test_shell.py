@@ -43,7 +43,9 @@ class ShellTests(unittest.TestCase):
         result = self.shell.execute('ls "unfinished')
         self.assertTrue(result.text.startswith("error: parse:"))
         self.assertFalse(result.should_exit)
-        self.assertEqual(self.shell.execute("whoami").text, "student")
+        self.assertEqual(
+            self.shell.execute("whoami").text, self.shell.user
+        )
 
     def test_blank_line(self) -> None:
         """Return no output for an empty input."""
@@ -61,7 +63,7 @@ class ShellTests(unittest.TestCase):
         """Use the shell name in the visible prompt."""
         shell = Shell("training-vfs")
         self.assertEqual(shell.name, "training-vfs")
-        self.assertEqual(shell.prompt, "student@training-vfs:/$ ")
+        self.assertEqual(shell.prompt, f"{shell.user}@training-vfs:/$ ")
 
 
 class VfsInfoTests(unittest.TestCase):

@@ -135,19 +135,19 @@ class CdTests(CommandTestCase):
         """Relative, absolute, parent and root moves."""
         shell = self.shell()
         self.run_in(shell, "cd docs/img")
-        self.assertEqual(shell.prompt, "student@rich.zip:/docs/img$ ")
+        self.assertEqual(shell.prompt, f"{shell.user}@rich.zip:/docs/img$ ")
         self.run_in(shell, "cd ..")
-        self.assertEqual(shell.prompt, "student@rich.zip:/docs$ ")
+        self.assertEqual(shell.prompt, f"{shell.user}@rich.zip:/docs$ ")
         self.run_in(shell, "cd /src/lib")
-        self.assertEqual(shell.prompt, "student@rich.zip:/src/lib$ ")
+        self.assertEqual(shell.prompt, f"{shell.user}@rich.zip:/src/lib$ ")
         self.run_in(shell, "cd")
-        self.assertEqual(shell.prompt, "student@rich.zip:/$ ")
+        self.assertEqual(shell.prompt, f"{shell.user}@rich.zip:/$ ")
 
     def test_parent_of_root_is_root(self) -> None:
         """Going above the root stays in the root."""
         shell = self.shell()
         self.run_in(shell, "cd ../..")
-        self.assertEqual(shell.prompt, "student@rich.zip:/$ ")
+        self.assertEqual(shell.prompt, f"{shell.user}@rich.zip:/$ ")
 
     def test_quoted_name_with_space(self) -> None:
         """A quoted name with a space is one operand."""
@@ -310,8 +310,8 @@ class WhoamiTests(CommandTestCase):
 
     def test_whoami(self) -> None:
         """Print the user; reject operands."""
-        shell = Shell()
-        self.assertEqual(self.run_in(shell, "whoami"), "student")
+        shell = Shell(user="carol")
+        self.assertEqual(self.run_in(shell, "whoami"), "carol")
         self.assert_error(
             shell, "whoami now", "error: whoami: extra operand 'now'"
         )

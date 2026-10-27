@@ -65,13 +65,13 @@ class ScriptTests(unittest.TestCase):
 
     def test_replay_shows_input_and_output(self) -> None:
         """Echo prompt and command, then the command output."""
-        shell = Shell()
+        shell = Shell(user="alice")
         out = []
         report = run_script(
             shell, load_script(self.write("whoami\n")), out.append
         )
         self.assertEqual(
-            out, ["student@demo-vfs:/$ whoami", "student"]
+            out, ["alice@demo-vfs:/$ whoami", "alice"]
         )
         self.assertEqual((report.errors, report.exited), (0, False))
 
@@ -79,17 +79,17 @@ class ScriptTests(unittest.TestCase):
         """Mark failed lines, keep going, and summarize the failures."""
         path = self.write("missing\nwhoami\ncd a b\n")
         out = []
-        report = run_script(Shell(), load_script(path), out.append)
+        report = run_script(Shell(user="bob"), load_script(path), out.append)
         self.assertEqual(report.errors, 2)
         self.assertIn("script: line 1: command failed", out)
         self.assertIn("script: line 3: command failed", out)
-        self.assertIn("student", out)
+        self.assertIn("bob", out)
         self.assertEqual(out[-1], "script: finished with 2 error(s)")
 
     def test_exit_stops_replay(self) -> None:
         """Ignore commands after exit and report the request."""
         out = []
         path = self.write("exit\nwhoami\n")
-        report = run_script(Shell(), load_script(path), out.append)
+        report = run_script(Shell(user="bob"), load_script(path), out.append)
         self.assertTrue(report.exited)
-        self.assertNotIn("student", out)
+        self.assertNotIn("bob", out)
