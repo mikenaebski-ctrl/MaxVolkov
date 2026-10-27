@@ -1,0 +1,7 @@
+# Служебная команда vfs-info: статистика и список VFS
+vfs-info
+vfs-info --list
+# ошибки vfs-info
+vfs-info --bogus
+vfs-info --list extra
+exit

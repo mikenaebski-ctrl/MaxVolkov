@@ -6,6 +6,7 @@ from tkinter.scrolledtext import ScrolledText
 from .config import Config, describe
 from .constants import TERMINAL_FONT, WIDGET_PADDING, WINDOW_GEOMETRY
 from .script import ScriptError, load_script, run_script
+from .session import Session
 from .shell import Shell
 
 
@@ -38,7 +39,7 @@ class ShellWindow:
         )
         self.entry.bind("<Return>", self.submit)
         self.entry.focus_set()
-        self.append("Stage 2: ls, cd, exit. Type a command and press Enter.\n")
+        self.append("Stage 3: ls, cd, vfs-info, exit. Press Enter to run.\n")
 
     def append(self, text: str) -> None:
         """Append output while keeping the transcript read only."""
@@ -80,11 +81,13 @@ class ShellWindow:
         return "break"
 
 
-def launch(config: Config) -> None:
+def launch(config: Config, session: Session) -> None:
     """Run the tkinter event loop, replaying the script once it starts."""
     root = tk.Tk()
-    window = ShellWindow(root, Shell(config.vfs_name))
+    window = ShellWindow(root, session.shell)
     window.show_config(config)
+    for message in session.messages:
+        window.print_line(message)
     if config.script_path:
         root.after(0, window.start_script, config.script_path)
     root.mainloop()

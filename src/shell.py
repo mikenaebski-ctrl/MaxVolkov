@@ -1,5 +1,7 @@
 """Execute parsed commands without accessing the real OS shell."""
 
+from typing import Optional
+
 from .commands import COMMANDS
 from .constants import (
     DEFAULT_PATH,
@@ -9,14 +11,18 @@ from .constants import (
 from .errors import CommandError
 from .parser import parse_line
 from .result import CommandResult
+from .vfs import Vfs
 
 
 class Shell:
     """Keep display state and dispatch commands through a registry."""
 
-    def __init__(self, name: str = DEFAULT_VFS_NAME) -> None:
-        """Assign the VFS name displayed by the GUI."""
+    def __init__(
+        self, name: str = DEFAULT_VFS_NAME, vfs: Optional[Vfs] = None
+    ) -> None:
+        """Assign the displayed name and the loaded VFS, if any."""
         self.name = name
+        self.vfs = vfs
 
     @property
     def prompt(self) -> str:
@@ -38,6 +44,6 @@ class Shell:
                 f"error: {name}: command not found", is_error=True
             )
         try:
-            return handler(arguments)
+            return handler(self, arguments)
         except CommandError as error:
             return CommandResult(f"error: {error}", is_error=True)

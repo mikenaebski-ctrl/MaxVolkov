@@ -1,7 +1,12 @@
 """Check command execution, diagnostics, and exit behavior."""
 
+from pathlib import Path
+import tempfile
 import unittest
 
+import make_vfs
+from src.config import Config
+from src.session import start_session
 from src.shell import Shell
 
 
@@ -67,3 +72,67 @@ class ShellTests(unittest.TestCase):
         shell = Shell("training-vfs")
         self.assertEqual(shell.name, "training-vfs")
         self.assertEqual(shell.prompt, "student@training-vfs:/$ ")
+
+
+class VfsInfoTests(unittest.TestCase):
+    """Check the service command and the session around it."""
+
+    def setUp(self) -> None:
+        """Build archives in a temporary directory."""
+        folder = tempfile.TemporaryDirectory()
+        self.addCleanup(folder.cleanup)
+        self.paths = make_vfs.create_all(Path(folder.name))
+
+    def session(self, name: str):
+        """Start a session for one generated archive."""
+        config = Config(vfs_path=str(self.paths[name]))
+        return start_session(config)
+
+    def test_info_without_vfs(self) -> None:
+        """Report that nothing is loaded."""
+        result = Shell().execute("vfs-info")
+        self.assertEqual(result.text, "error: vfs-info: no VFS loaded")
+        self.assertTrue(result.is_error)
+
+    def test_info_statistics(self) -> None:
+        """Print the counters of the loaded archive."""
+        shell = self.session("binary.zip").shell
+        self.assertEqual(
+            shell.execute("vfs-info").text,
+            "vfs: binary.zip\ndirectories: 1\nfiles: 2 (1 binary)\n"
+            "size: 267 B",
+        )
+
+    def test_info_list(self) -> None:
+        """List every path with its kind and size."""
+        shell = self.session("binary.zip").shell
+        lines = shell.execute("vfs-info --list").text.splitlines()
+        self.assertEqual(lines[4:], [
+            "/bin/",
+            "/bin/data.bin  base64  256 B",
+            "/text.txt  text  11 B",
+        ])
+
+    def test_info_bad_options(self) -> None:
+        """Reject unknown and extra options."""
+        shell = self.session("minimal.zip").shell
+        for line in ("vfs-info -x", "vfs-info --list --list"):
+            with self.subTest(line=line):
+                self.assertTrue(shell.execute(line).is_error)
+
+    def test_session_names_shell_after_file(self) -> None:
+        """Show the archive name in the prompt."""
+        session = self.session("minimal.zip")
+        self.assertFalse(session.failed)
+        self.assertIn("minimal.zip", session.shell.prompt)
+        self.assertEqual(
+            session.messages,
+            ["vfs: loaded minimal.zip (0 directories, 1 files)"],
+        )
+
+    def test_failed_session_keeps_shell_usable(self) -> None:
+        """Report a load error and still accept commands."""
+        session = self.session("not_a_zip.zip")
+        self.assertTrue(session.failed)
+        self.assertTrue(session.messages[0].startswith("error: vfs:"))
+        self.assertEqual(session.shell.execute("ls").text, "ls: []")

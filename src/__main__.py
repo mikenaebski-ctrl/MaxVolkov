@@ -5,6 +5,7 @@ from typing import Optional, Sequence
 
 from .config import describe, parse_args
 from .constants import EXIT_FAILURE, EXIT_SUCCESS
+from .session import start_session
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
@@ -12,6 +13,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     config = parse_args(argv)
     for line in describe(config):
         print(line)
+    session = start_session(config)
+    for message in session.messages:
+        print(message, file=sys.stderr if session.failed else sys.stdout)
     try:
         import tkinter as tk
     except ImportError:
@@ -23,7 +27,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     try:
         from .gui import launch
 
-        launch(config)
+        launch(config, session)
     except tk.TclError as error:
         print(f"Cannot start the GUI: {error}", file=sys.stderr)
         return EXIT_FAILURE
