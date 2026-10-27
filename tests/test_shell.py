@@ -17,23 +17,13 @@ class ShellTests(unittest.TestCase):
         """Create a fresh shell for every test."""
         self.shell = Shell()
 
-    def test_stub_output(self) -> None:
-        """Echo every supported argument without changing the prompt."""
-        cases = (
-            ("ls", "ls: []"),
-            ('ls "My Documents" file', "ls: ['My Documents', 'file']"),
-            ("cd", "cd: []"),
-            ('cd "My Documents"', "cd: ['My Documents']"),
-            ("cd ..", "cd: ['..']"),
-            ('cd ""', "cd: ['']"),
-        )
-        before = self.shell.prompt
-        for line, expected in cases:
+    def test_commands_need_vfs(self) -> None:
+        """Report a missing VFS instead of pretending to list files."""
+        for line in ("ls", "cd", "cat x", "tree", "vfs-info"):
             with self.subTest(line=line):
                 result = self.shell.execute(line)
-                self.assertEqual(result.text, expected)
-                self.assertFalse(result.should_exit)
-                self.assertEqual(self.shell.prompt, before)
+                self.assertTrue(result.is_error)
+                self.assertIn("no VFS loaded", result.text)
 
     def test_invalid_commands(self) -> None:
         """Report unknown commands and invalid argument counts."""
@@ -53,7 +43,7 @@ class ShellTests(unittest.TestCase):
         result = self.shell.execute('ls "unfinished')
         self.assertTrue(result.text.startswith("error: parse:"))
         self.assertFalse(result.should_exit)
-        self.assertEqual(self.shell.execute("ls").text, "ls: []")
+        self.assertEqual(self.shell.execute("whoami").text, "student")
 
     def test_blank_line(self) -> None:
         """Return no output for an empty input."""
@@ -135,4 +125,6 @@ class VfsInfoTests(unittest.TestCase):
         session = self.session("not_a_zip.zip")
         self.assertTrue(session.failed)
         self.assertTrue(session.messages[0].startswith("error: vfs:"))
-        self.assertEqual(session.shell.execute("ls").text, "ls: []")
+        self.assertEqual(
+            session.shell.execute("ls").text, "error: ls: no VFS loaded"
+        )

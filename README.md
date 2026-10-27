@@ -11,9 +11,9 @@
 Команды не передаются оболочке реальной ОС.
 
 Работа выполняется по этапам. Готовы **этап 1 (REPL)**, **этап 2
-(конфигурация)** и **этап 3 (VFS из ZIP-архива)**. Следующие этапы
-(логика `ls` и `cd`, команды `cat`, `tree`, `whoami`, `mv`) будут
-добавлены позже.
+(конфигурация)**, **этап 3 (VFS из ZIP-архива)** и **этап 4 (основные
+команды)**: `ls`, `cd`, `cat`, `tree`, `whoami`. Команда `mv` будет
+добавлена на этапе 5.
 
 Требования: Python 3.9 или новее, только стандартная библиотека и tkinter.
 
@@ -93,17 +93,26 @@ python3 tests/make_vfs.py /tmp/vfs
 `not_a_zip.zip`, `truncated.zip`, `corrupt.zip`, `unsafe.zip`,
 `clash.zip`.
 
-## Команды
+## Команды (этап 4)
 
-| Команда | Аргументы | Результат |
+Пути поддерживаются абсолютные (`/docs`) и относительные, с `.` и `..`;
+выше корня подняться нельзя (`cd ..` в корне остаётся в корне). Текущая
+папка показывается в приглашении: `student@rich.zip:/docs$`. Команды,
+которым нужна VFS, без неё отвечают `error: <команда>: no VFS loaded`.
+
+| Команда | Режимы | Результат |
 | --- | --- | --- |
-| `ls` | любое количество | выводит имя команды и список аргументов |
-| `cd` | ноль или один путь | выводит имя команды и список аргументов |
+| `ls [-a] [-l] [путь...]` | без пути: текущая папка; `-a` скрытые и `.`, `..`; `-l` тип (`d`/`-`), размер, имя; `-la` вместе; `--` конец опций | содержимое папки по именам; для файла его имя; при нескольких путях у папок заголовки `путь:`; ошибочный путь не мешает остальным |
+| `cd [путь]` | без пути: в корень | меняет текущую папку; ошибки `No such file or directory`, `Not a directory`; больше одного пути: `expected at most one path` |
+| `cat файл...` | несколько файлов подряд | текст как есть, двоичные данные в base64; `Is a directory`, `No such file or directory`, `missing file operand` |
+| `tree [-a] [-L N] [путь]` | `-a` скрытые; `-L N` или `-LN` глубина | дерево с `├──`, `└──`, `│`, затем `N directories, M files` |
+| `whoami` | без аргументов | имя пользователя из приглашения (`student`) |
 | `exit` | без аргументов | закрывает окно |
-| `vfs-info` | `--list` (необязательно) | служебная: имя, число папок и файлов, размер; с `--list` и все пути (`text` или `base64`, размер) |
+| `vfs-info [--list]` | служебная | имя, число папок и файлов, размер; с `--list` все пути (`text` или `base64`, размер) |
 
-`ls` и `cd` пока заглушки: пути не проверяются, текущая папка не меняется.
-Пустая строка игнорируется. Имена команд чувствительны к регистру.
+Файлы и папки, имена которых начинаются с точки, считаются скрытыми.
+Неизвестная опция даёт `invalid option -- 'x'`. Пустая строка
+игнорируется. Имена команд чувствительны к регистру.
 
 ## Структура проекта
 
@@ -117,7 +126,9 @@ src/
   shell.py         выполнение команд через словарь COMMANDS
   vfs.py           VFS в памяти и загрузка из ZIP
   session.py       создание оболочки: загрузка VFS, сообщения
-  commands/        функции команд (по одной на команду)
+  resolve.py       разбор путей (., .., абсолютные и относительные)
+  commands/        команды: fs.py (ls, cd, cat), tree.py, whoami.py,
+                   vfs_info.py, repl.py (exit), options.py (опции)
   result.py        результат команды и признак закрытия окна
   errors.py        ожидаемые ошибки команд
   constants.py     именованные настройки
@@ -170,6 +181,8 @@ python3 -B -m unittest discover -s tests -v
 - оболочку: вывод заглушек, ошибки, восстановление после ошибки, `exit`;
 - конфигурацию: разбор `--vfs` и `--script`, ошибки параметров;
 - скрипт: комментарии, пропуск пустых строк, ошибки, `exit`;
+- команды этапа 4: все режимы `ls`, `cd`, `cat`, `tree`, `whoami`,
+  пути, ошибки и частичный вывод при нескольких операндах;
 - VFS: минимальный, пустой, несколько файлов, 4 уровня, base64, все
   ошибки загрузки, неизменность архива; команду `vfs-info`;
 - ограничения кода (`tests/test_quality.py`): длина строк (до 80) и
@@ -197,35 +210,70 @@ sh tests/scripts/stage2_both_and_errors.sh
 ```sh
 sh tests/scripts/stage3_minimal.sh   # один файл, пустой архив
 sh tests/scripts/stage3_several.sh   # несколько файлов, base64
-sh tests/scripts/stage3_deep.sh      # 4 уровня и общий скрипт команд
+sh tests/scripts/stage3_deep.sh      # 4 уровня
 sh tests/scripts/stage3_errors.sh    # все ошибки загрузки VFS
 ```
 
-Стартовые скрипты: `examples/stage3_vfs_info.txt` и общий
-`examples/stage3_all_commands.txt` со всеми командами и режимами,
-включая ошибки. Он пополняется на каждом следующем этапе. Каждый
-скрипт заканчивается `exit`, поэтому окно закрывается само.
+Стартовый скрипт этапа: `examples/stage3_vfs_info.txt`. Каждый скрипт
+заканчивается `exit`, поэтому окно закрывается само.
+
+Скрипты этапа 4 (команды на `rich.zip` и `deep.zip`, ошибки без VFS):
+
+```sh
+sh tests/scripts/stage4_rich.sh     # все режимы команд этапа 4 + общий
+sh tests/scripts/stage4_deep.sh     # навигация на глубину 4 уровня
+sh tests/scripts/stage4_no_vfs.sh   # no VFS loaded и неудачная загрузка
+```
+
+Стартовые скрипты: `examples/stage4_commands.txt` (все режимы и
+ошибки этапа 4), `examples/stage4_deep.txt` и общий
+`examples/all_commands.txt` со всеми командами этапов 1-4 и ошибками;
+он пополняется на каждом следующем этапе.
 
 ## Примеры использования
 
-Команды для ручной демонстрации лежат в `examples/stage1.txt`.
-Вводить их нужно по одной в окне эмулятора:
+Сеанс на архиве `rich.zip` (`python3 tests/make_vfs.py /tmp/vfs`, затем
+`sh run.sh --vfs /tmp/vfs/rich.zip`):
+
+```text
+student@rich.zip:/$ ls -la
+d      0 .
+d      0 ..
+-     12 .hidden
+d      0 docs
+d      0 empty
+-     21 readme.txt
+d      0 src
+student@rich.zip:/$ cd docs/img
+student@rich.zip:/docs/img$ cat logo.bin
+AAECAwQFBgc=
+student@rich.zip:/docs/img$ cd ../..
+student@rich.zip:/$ tree -L 1
+.
+├── docs
+├── empty
+├── readme.txt
+└── src
+
+3 directories, 1 file
+student@rich.zip:/$ cat readme.txt docs
+Rich VFS
+second line
+error: cat: docs: Is a directory
+student@rich.zip:/$ cd nothing
+error: cd: nothing: No such file or directory
+student@rich.zip:/$ whoami
+student
+student@rich.zip:/$ exit
+```
+
+Без `--vfs` файловые команды сообщают об отсутствии VFS (так выглядят
+команды `examples/stage1.txt`, где на этапе 1 `ls` и `cd` были
+заглушками):
 
 ```text
 student@demo-vfs:/$ ls
-ls: []
-student@demo-vfs:/$ ls "My Documents" file.txt
-ls: ['My Documents', 'file.txt']
-student@demo-vfs:/$ ls 'single quoted path'
-ls: ['single quoted path']
-student@demo-vfs:/$ ls ""
-ls: ['']
-student@demo-vfs:/$ cd "My Documents"
-cd: ['My Documents']
-student@demo-vfs:/$ cd ..
-cd: ['..']
-student@demo-vfs:/$ cd first second
-error: cd: expected at most one path
+error: ls: no VFS loaded
 student@demo-vfs:/$ missing
 error: missing: command not found
 student@demo-vfs:/$ ls "unfinished

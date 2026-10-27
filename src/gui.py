@@ -39,7 +39,7 @@ class ShellWindow:
         )
         self.entry.bind("<Return>", self.submit)
         self.entry.focus_set()
-        self.append("Stage 3: ls, cd, vfs-info, exit. Press Enter to run.\n")
+        self.append("Stage 4: ls cd cat tree whoami vfs-info exit\n")
 
     def append(self, text: str) -> None:
         """Append output while keeping the transcript read only."""

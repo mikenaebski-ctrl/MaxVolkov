@@ -1,7 +1,7 @@
 # Скрипт с ошибками: исполнение продолжается, ошибки отмечаются
-ls first
+whoami extra
 missing_command
 cd one two
 ls "unfinished
-ls after_errors
+whoami
 exit

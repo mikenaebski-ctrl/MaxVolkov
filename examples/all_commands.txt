@@ -1,0 +1,30 @@
+# Общий скрипт всех команд этапов 1-4 на rich.zip (tests/make_vfs.py)
+# Комментарий, пустые строки и кавычки
+whoami   # комментарий после команды
+ls "docs" 'src'
+ls ""
+# --- служебная vfs-info: статистика, список, ошибки
+vfs-info
+vfs-info --list
+vfs-info --bogus
+vfs-info --list extra
+# --- навигация и просмотр
+ls -la
+cd docs
+cat guide.txt ../readme.txt
+cat img/logo.bin
+tree
+cd /
+tree -L 1
+# --- ошибки
+missing_command
+ls "unfinished
+exit now
+cd a b
+ls nothing
+cat docs
+tree -L x
+whoami now
+# --- exit закрывает окно, команды после него не выполняются
+exit
+ls never_shown

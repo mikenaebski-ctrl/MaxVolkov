@@ -68,28 +68,28 @@ class ScriptTests(unittest.TestCase):
         shell = Shell()
         out = []
         report = run_script(
-            shell, load_script(self.write('ls "a b"\n')), out.append
+            shell, load_script(self.write("whoami\n")), out.append
         )
         self.assertEqual(
-            out, ["student@demo-vfs:/$ ls \"a b\"", "ls: ['a b']"]
+            out, ["student@demo-vfs:/$ whoami", "student"]
         )
         self.assertEqual((report.errors, report.exited), (0, False))
 
     def test_replay_reports_errors_and_continues(self) -> None:
         """Mark failed lines, keep going, and summarize the failures."""
-        path = self.write("missing\nls\ncd a b\n")
+        path = self.write("missing\nwhoami\ncd a b\n")
         out = []
         report = run_script(Shell(), load_script(path), out.append)
         self.assertEqual(report.errors, 2)
         self.assertIn("script: line 1: command failed", out)
         self.assertIn("script: line 3: command failed", out)
-        self.assertIn("ls: []", out)
+        self.assertIn("student", out)
         self.assertEqual(out[-1], "script: finished with 2 error(s)")
 
     def test_exit_stops_replay(self) -> None:
         """Ignore commands after exit and report the request."""
         out = []
-        path = self.write("exit\nls\n")
+        path = self.write("exit\nwhoami\n")
         report = run_script(Shell(), load_script(path), out.append)
         self.assertTrue(report.exited)
-        self.assertNotIn("ls: []", out)
+        self.assertNotIn("student", out)

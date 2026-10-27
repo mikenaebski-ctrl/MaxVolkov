@@ -70,6 +70,21 @@ def binary(path: Path) -> Path:
     return write_zip(path, entries, zipfile.ZIP_DEFLATED)
 
 
+def rich(path: Path) -> Path:
+    """Hidden entries, a binary file, nested folders and an empty one."""
+    entries = [
+        ("readme.txt", b"Rich VFS\nsecond line\n"),
+        (".hidden", b"hidden file\n"),
+        ("docs/guide.txt", b"guide\n"),
+        ("docs/.secret", b"secret\n"),
+        ("docs/img/logo.bin", BINARY_DATA[:8]),
+        ("src/main.py", b"print('hi')\n"),
+        ("src/lib/util.py", b"# util\n"),
+        ("empty/", b""),
+    ]
+    return write_zip(path, entries, zipfile.ZIP_DEFLATED)
+
+
 def not_a_zip(path: Path) -> Path:
     """A text file that is not an archive."""
     path.write_text("this is not a zip archive\n", encoding="utf-8")
@@ -109,6 +124,7 @@ BUILDERS: Dict[str, Callable[[Path], Path]] = {
     "several.zip": several,
     "deep.zip": deep,
     "binary.zip": binary,
+    "rich.zip": rich,
     "not_a_zip.zip": not_a_zip,
     "truncated.zip": truncated,
     "corrupt.zip": corrupt,

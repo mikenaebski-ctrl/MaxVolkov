@@ -1,15 +1,12 @@
 """Execute parsed commands without accessing the real OS shell."""
 
-from typing import Optional
+from typing import List, Optional
 
 from .commands import COMMANDS
-from .constants import (
-    DEFAULT_PATH,
-    DEFAULT_USER_NAME,
-    DEFAULT_VFS_NAME,
-)
+from .constants import DEFAULT_USER_NAME, DEFAULT_VFS_NAME
 from .errors import CommandError
 from .parser import parse_line
+from .resolve import join_path
 from .result import CommandResult
 from .vfs import Vfs
 
@@ -23,11 +20,13 @@ class Shell:
         """Assign the displayed name and the loaded VFS, if any."""
         self.name = name
         self.vfs = vfs
+        self.cwd: List[str] = []
 
     @property
     def prompt(self) -> str:
-        """Build the prompt for the demonstration VFS."""
-        return f"{DEFAULT_USER_NAME}@{self.name}:{DEFAULT_PATH}$ "
+        """Build the prompt with the current directory."""
+        path = join_path(self.cwd)
+        return f"{DEFAULT_USER_NAME}@{self.name}:{path}$ "
 
     def execute(self, line: str) -> CommandResult:
         """Convert expected parser and command errors into output."""

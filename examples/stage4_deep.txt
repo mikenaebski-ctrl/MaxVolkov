@@ -1,0 +1,16 @@
+# Этап 4: навигация по VFS глубиной 4 уровня (deep.zip)
+tree
+cd level1/level2/level3
+ls
+cat three.txt
+cd level4
+cat four.txt
+cat ../three.txt ../../two.txt
+cd /
+tree -L 2 level1
+ls -l level1
+cd level1/empty
+ls
+tree
+cd ../../../..
+exit

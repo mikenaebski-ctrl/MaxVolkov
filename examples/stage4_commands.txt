@@ -1,0 +1,46 @@
+# Этап 4: ls, cd, cat, tree, whoami на архиве rich.zip (tests/make_vfs.py)
+# --- whoami
+whoami
+whoami now
+# --- ls: обычный, -a, -l, -la, пути, несколько операндов
+ls
+ls -a
+ls -l
+ls -la docs
+ls /docs/img
+ls docs/img/..
+ls readme.txt
+ls docs nothing src/lib
+ls nothing
+ls readme.txt/x
+ls -z
+# --- cd: относительный, абсолютный, .., без аргументов
+cd docs/img
+ls
+cd ..
+cd /src/lib
+cd ../..
+cd
+cd ../..
+cd nothing
+cd readme.txt
+cd a b
+# --- cat: текст, несколько файлов, двоичный (base64), ошибки
+cat readme.txt
+cat docs/guide.txt .hidden
+cat docs/img/logo.bin
+cat
+cat nothing
+cat docs
+cat readme.txt docs
+# --- tree: целиком, -a, -L, подпапка, файл, ошибки
+tree
+tree -a docs
+tree -L 1
+tree -L2 src
+tree readme.txt
+tree empty
+tree -L 0
+tree nothing
+tree a b
+exit
